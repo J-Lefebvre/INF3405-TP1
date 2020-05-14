@@ -7,8 +7,7 @@ public class Client {
 	
 	/*
 	 *  Application client
-	 */
-	
+	 */	
 	public static void main(String[] args) throws Exception {
 		// Adresse et port du serveur
 		String serverAddress = "127.0.0.1";
