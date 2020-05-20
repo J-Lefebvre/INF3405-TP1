@@ -140,11 +140,34 @@ public class Server {
 		 */
 		public void run() {
 			try {
-				// Création d'un canal sortant pour envoyer des messages au clients
-				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-				
+				/*
 				// Envoi d'un message au client
 				out.writeUTF("Hello from server - you are client#" + clientNumber);
+				 */
+				
+				// Création d'un canal entrant pour recevoir les messages du client
+				DataInputStream in = new DataInputStream(socket.getInputStream());
+				
+				// Création du lecteur des entrées du client
+				String readFromClient; 
+				
+				// Création d'un canal sortant pour envoyer des messages au client
+				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+				
+				// Création d'un canal sortant pour envoyer des messages au clients
+				String writeToClient;
+				
+				do {				
+					// Lecture
+					readFromClient = in.readUTF();
+					
+					// Affichage
+					System.out.println(readFromClient);			
+
+					
+
+					
+				} while (!readFromClient.equals("quit()"));			
 			} catch (IOException e) {
 				System.out.println("Error handling client#" + clientNumber +": " + e);
 			}

@@ -92,24 +92,38 @@ public class Client {
 		
 		System.out.format("Client - The server is running on %s:%d%n", serverAddress,serverPort);
 		
-		 // Création d'un canal sortant pour envoyer des messages au serveur
+		
+		System.out.println("Type \"quit()\" to close the server!");
+		
+		// Création d'un canal sortant pour envoyer des messages au serveur
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+		
+		// Création de la chaine contenant les messages à envoyer au server
+		String writeToServer;
+		
+		// Création d'un canal entrant pour recevoir les messages envoyés par le serveur 
+		DataInputStream in = new DataInputStream(socket.getInputStream());
 			
-		// Entrée du nom d'utilisateur
-		System.out.print("Enter username: ");
-		String username = sc.next();
+		// Création de la chaine contenant les messages provenant du server
+		String readFromServer;
 		
-		// Envoi du nom d'utilisateur?
-		out.writeUTF(username);
-		
-		// validation ou création nouvel utilisateur dans la base de donnée
-		// entrée mot de passe
-		// validation ou message d'erreur
+		do {
+			// Entrée du nom d'utilisateur
+			System.out.print("Enter username: ");
+			writeToServer = sc.next();
+			
+			// Envoi au serveur
+			out.writeUTF(writeToServer);
+			
+			
+			// validation ou création nouvel utilisateur dans la base de donnée
+			// entrée mot de passe
+			// validation ou message d'erreur
+		} while (!writeToServer.equals("quit()"));
 		
 		// Fermeture du Scanner
 		sc.close();
-		
-		
+				
 		/* Extrait de code des notes de cours
 		 * 	
 		 * 
