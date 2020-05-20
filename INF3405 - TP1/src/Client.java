@@ -1,4 +1,5 @@
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -84,8 +85,23 @@ public class Client {
 				System.err.println("Invalid port! Please try again...");
 			}			
 		} while (!portIsValid);
-
-		// entrée nom d'utilisateur
+		
+		
+		// Création d'une nouvelle connexion avec le serveur 
+		socket = new Socket(serverAddress, serverPort);
+		
+		System.out.format("Client - The server is running on %s:%d%n", serverAddress,serverPort);
+		
+		 // Création d'un canal sortant pour envoyer des messages au serveur
+		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			
+		// Entrée du nom d'utilisateur
+		System.out.print("Enter username: ");
+		String username = sc.next();
+		
+		// Envoi du nom d'utilisateur?
+		out.writeUTF(username);
+		
 		// validation ou création nouvel utilisateur dans la base de donnée
 		// entrée mot de passe
 		// validation ou message d'erreur
@@ -95,22 +111,20 @@ public class Client {
 		
 		
 		/* Extrait de code des notes de cours
-		 * 
-		 * // Création d'une nouvelle connexion avec le serveur socket = new
-		 * Socket(serverAddress, port);
-		 * 
-		 * System.out.format("Client - The server is running on %s:%d%n", serverAddress,
-		 * port);
+		 * 	
 		 * 
 		 * // Création d'un canal entrant pour recevoir les messages envoyés par le
-		 * serveur DataInputStream in = new DataInputStream(socket.getInputStream());
+		 * serveur 
+		 * DataInputStream in = new DataInputStream(socket.getInputStream());
 		 * 
 		 * // Attente de la réception d'un message envoyé par le serveur sur le canal
 		 * String helloMesssageFromServer = in.readUTF(); System.out.println("Client - "
 		 * + helloMesssageFromServer);
-		 * 
-		 * // Fermeture de la connexion avec le serveur socket.close();
+		 * 		 * 
 		 */
+		
+		// Fermeture de la connexion avec le serveur 
+		socket.close();
 			
     }    
 }

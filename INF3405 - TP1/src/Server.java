@@ -1,4 +1,5 @@
 import java.io.DataOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -139,7 +140,7 @@ public class Server {
 		 */
 		public void run() {
 			try {
-				// Création d'un canal sortant our envoyer des messages au clients
+				// Création d'un canal sortant pour envoyer des messages au clients
 				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 				
 				// Envoi d'un message au client
