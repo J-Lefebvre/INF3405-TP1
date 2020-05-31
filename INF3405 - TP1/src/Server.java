@@ -6,6 +6,12 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+
 
 public class Server {
 	private static ServerSocket listener;
@@ -47,7 +53,15 @@ public class Server {
 		int clientNumber = 0;
 		
 		validateAddress();
-
+		
+		// Crée le fichier Passwords.txt s'il n'existe pas déjà
+		try {
+			File passwords = new File("Passwords.txt");
+			passwords.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+			
 		// Création de la connexion pour communiquer avec les clients
 		listener = new ServerSocket();
 		listener.setReuseAddress(true);
@@ -118,6 +132,40 @@ public class Server {
 
 					// Affichage
 					System.out.println(readFromClient);
+					
+					// Chercher username dans le fichier Passwords.txt
+					File fdPasswords = new File("Passwords.txt");
+					String[] splitTxtLine = null;
+					FileReader fr = new FileReader(fdPasswords);
+					BufferedReader br = new BufferedReader(fr);
+					String txtLine;
+					String username = readFromClient;
+					Boolean usernameExists = false;
+					
+					while((txtLine = br.readLine()) != null) {
+						splitTxtLine = txtLine.split(" ");
+						if (splitTxtLine[0] == username) {
+							usernameExists = true;
+							break;
+						}
+					}
+
+					String password;
+					
+					if (usernameExists = false) { // TODO : Ajouter nom d'utilisateur et mot de passe à Password.txt				
+						password = in.readUTF();
+						
+					}
+					else { // Vérifier que le mot de passe fourni correspond au nom d'utilisateur
+						Boolean passwordIsCorrect = false;
+						password = in.readUTF();
+						if (splitTxtLine[1] == password) {
+							passwordIsCorrect = true;
+						}
+					}
+					
+					// Si passwordIsCorrect = false redemander username, password.
+					// Else envoyer les 15 derniers messages du log et poursuivre...
 
 				} while (!readFromClient.equals("quit()"));
 			} catch (IOException e) {

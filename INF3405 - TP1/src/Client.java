@@ -65,6 +65,7 @@ public class Client {
 			// Envoi au serveur
 			out.writeUTF(writeToServer);
 
+			
 			// validation ou création nouvel utilisateur dans la base de donnée
 			// entrée mot de passe
 			// validation ou message d'erreur
