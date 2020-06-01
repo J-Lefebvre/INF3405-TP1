@@ -22,6 +22,7 @@ public class Server {
 	private static int ADDRESS_LENGTH = 4;
 	private static int PORT_RANGE_MIN = 5000;
 	private static int PORT_RANGE_MAX = 5050;
+	private static String QUIT_COMMAND = "quit()";
 
 	// Création du scanner pour lire les entrées de l'utilisateur
 	private static Scanner sc = new Scanner(System.in);
@@ -36,17 +37,16 @@ public class Server {
 	/*
 	 * Requis du serveur:
 	 * 
-	 * TODONE: Saisie des paramètres du serveur (adresse IP, port d’écoute entre
-	 * 5000 et 5050) 
-	 * TODO: Pouvoir connecter des utilisateurs avec leurs mots de passe 
+	 * TODONE: Saisie des paramètres du serveur (adresse IP, port d’écoute entre 5000 et 5050) 
+	 * TODONE: Pouvoir connecter des utilisateurs avec leurs mots de passe 
 	 * TODO: Pouvoir envoyer un historique des sessions de clavardage 
 	 * TODO: Pouvoir fermer le serveur puis le rouvrir, et avoir tous les profils usagers et messages disponibles (écriture sur disque et pas uniquement sur RAM)
 	 * TODO: Recevoir les messages des clients 
 	 * TODO: Tenir un historique de toutes les messages.
-	 * TODO: Tenir une base de données des usagers et leurs mots de passe
+	 * TODONE: Tenir une base de données des usagers et leurs mots de passe
 	 * TODO: Afficher en temps réel les messages 
-	 * TODO: Effectuer correctement la vérification nom d’utilisateur/ mot de passe
-	 * TODO: Créer les comptes automatiquement s’ils n’existent pas
+	 * TODONE: Effectuer correctement la vérification nom d’utilisateur/ mot de passe
+	 * TODONE: Créer les comptes automatiquement s’ils n’existent pas
 	 */
 
 	/*
@@ -110,51 +110,50 @@ public class Server {
 		 */
 		public void run() {
 			try {
-				/*
-				 * // Envoi d'un message au client
-				 * out.writeUTF("Hello from server - you are client#" + clientNumber);
-				 */
-
-				// Création d'un canal entrant pour recevoir les messages du client
-				DataInputStream in = new DataInputStream(socket.getInputStream());
-
-				// Création du lecteur des entrées du client
-				String readFromClient;
-
-				// Création d'un canal sortant pour envoyer des messages au client
-				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-				// Création d'un canal sortant pour envoyer des messages au clients
-				String writeToClient;
-
-				Boolean passwordIsCorrect = false;
-				do {
-					// Réception du nom d'utilisateur du client
+				while (true) {
+					// Création d'un canal entrant pour recevoir les messages du client
+					DataInputStream in = new DataInputStream(socket.getInputStream());
+	
+					// Création d'un canal sortant pour envoyer des messages au client
+					DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+						
 					String username;
-					username = in.readUTF();
-					System.out.println(username);
-					
-					// Recherche du nom d'utilisateur dans la HashMap passwords
-					Boolean usernameExists = passwords.containsKey(username);
-					
-					// Réception du mot de passe du client
 					String password;
-					password = in.readUTF();
-					System.out.println(password);
-					
-					if (usernameExists = false) { // Ajouter nom d'utilisateur et mot de passe à la HashMap passwords et à Passwords.txt				
-						passwords.put(username, password);
-						addPassword(username, password);
-					}
-					else { // Vérifier que le mot de passe fourni correspond au nom d'utilisateur
-						passwordIsCorrect = (password == passwords.get(username));
-					}
-					
-					// if (!passwordIsCorrect) redemander username, password.
-					
-					// else envoyer les 15 derniers messages du log et poursuivre...
-
-				} while (!passwordIsCorrect);
+					Boolean passwordIsCorrect = false;
+				
+					do {
+						// Réception du nom d'utilisateur du client
+						out.writeUTF("> Enter username:");					
+						username = in.readUTF();
+						
+						// Recherche du nom d'utilisateur dans la HashMap passwords
+						Boolean usernameExists = passwords.containsKey(username);
+						
+						// Réception du mot de passe du client
+						out.writeUTF("> Enter password:");
+						password = in.readUTF();
+						
+						if (usernameExists == false) { // Ajouter nom d'utilisateur et mot de passe à la HashMap passwords et à Passwords.txt
+							if (!username.equals(QUIT_COMMAND) || !username.equals(QUIT_COMMAND)) {
+								out.writeUTF("Username non-existent! Saving new account...");
+								passwords.put(username, password);
+								addPassword(username, password);
+							}
+						}
+						else { // Vérifier que le mot de passe fourni correspond au nom d'utilisateur	
+							out.writeUTF("Authentification...");
+							passwordIsCorrect = password.equals(passwords.get(username));										
+						}	
+						
+						// tant que !passwordIsCorrect, redemander username et password					
+						// else envoyer les 15 derniers messages du log et poursuivre...	
+						if (!passwordIsCorrect && usernameExists) {
+							out.writeUTF("ERROR: Wrong password!");
+						}
+					} while (!passwordIsCorrect);
+					out.writeUTF("Access granted! Welcome " + username + "!");
+					out.writeUTF("> Enter");					
+				}
 			} catch (IOException e) {
 				System.out.println("Error handling client#" + clientNumber + ": " + e);
 			} finally {
@@ -179,7 +178,7 @@ public class Server {
 			boolean bytesAreValid = true;
 
 			// Entrée de l'adresse IP du serveur
-			System.out.print("Enter IP address: ");
+			System.out.print("> Enter IP address: ");
 			serverAddress = sc.next();
 
 			// Vérification de la longueur (nombre d'octets == 4)
@@ -200,7 +199,7 @@ public class Server {
 			// Vérification de l'adresse IP du serveur
 			ipIsValid = hasFourBytes && bytesAreValid;
 			if (!ipIsValid) {
-				System.err.println("Invalid IP address! Please try again...");
+				System.err.println("ERROR: Invalid IP address! Please try again...");
 			}
 		} while (!ipIsValid);
 
@@ -209,14 +208,14 @@ public class Server {
 
 		do {
 			// Entrée de l'adresse IP du serveur
-			System.out.print("Enter port: ");
+			System.out.print("> Enter port: ");
 			serverPort = sc.nextInt();
 
 			// Vérification du port du serveur
 			if (serverPort >= PORT_RANGE_MIN && serverPort <= PORT_RANGE_MAX) {
 				portIsValid = true;
 			} else {
-				System.err.println("Invalid port! Please try again...");
+				System.err.println("ERROR: Invalid port! Please try again...");
 			}
 		} while (!portIsValid);
 
