@@ -61,14 +61,15 @@ public class Client {
 			// Entrée du nom d'utilisateur
 			System.out.print("Enter username: ");
 			writeToServer = sc.next();
-
-			// Envoi au serveur
 			out.writeUTF(writeToServer);
 
+			// Entrée du mot de passe
+			System.out.print("Enter password: ");
+			writeToServer = sc.next();
+			out.writeUTF(writeToServer);
 			
-			// validation ou création nouvel utilisateur dans la base de donnée
-			// entrée mot de passe
 			// validation ou message d'erreur
+			
 		} while (!writeToServer.equals("quit()"));
 
 		// Fermeture du Scanner

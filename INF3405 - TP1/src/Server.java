@@ -1,11 +1,13 @@
 import java.io.DataOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.HashMap;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FileReader;
@@ -28,6 +30,9 @@ public class Server {
 	private static String serverAddress;
 	private static int serverPort;
 
+	// Correspondances nom d'utilisateur - mot de passe
+	private static HashMap<String, String> passwords = new HashMap<String, String>();
+	
 	/*
 	 * Requis du serveur:
 	 * 
@@ -54,13 +59,9 @@ public class Server {
 		
 		validateAddress();
 		
-		// Crée le fichier Passwords.txt s'il n'existe pas déjà
-		try {
-			File passwords = new File("Passwords.txt");
-			passwords.createNewFile();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		createPasswordsTxt();
+		
+		importPasswords();
 			
 		// Création de la connexion pour communiquer avec les clients
 		listener = new ServerSocket();
@@ -126,48 +127,34 @@ public class Server {
 				// Création d'un canal sortant pour envoyer des messages au clients
 				String writeToClient;
 
+				Boolean passwordIsCorrect = false;
 				do {
-					// Lecture
-					readFromClient = in.readUTF();
-
-					// Affichage
-					System.out.println(readFromClient);
+					// Réception du nom d'utilisateur du client
+					String username;
+					username = in.readUTF();
+					System.out.println(username);
 					
-					// Chercher username dans le fichier Passwords.txt
-					File fdPasswords = new File("Passwords.txt");
-					String[] splitTxtLine = null;
-					FileReader fr = new FileReader(fdPasswords);
-					BufferedReader br = new BufferedReader(fr);
-					String txtLine;
-					String username = readFromClient;
-					Boolean usernameExists = false;
+					// Recherche du nom d'utilisateur dans la HashMap passwords
+					Boolean usernameExists = passwords.containsKey(username);
 					
-					while((txtLine = br.readLine()) != null) {
-						splitTxtLine = txtLine.split(" ");
-						if (splitTxtLine[0] == username) {
-							usernameExists = true;
-							break;
-						}
-					}
-
+					// Réception du mot de passe du client
 					String password;
+					password = in.readUTF();
+					System.out.println(password);
 					
-					if (usernameExists = false) { // TODO : Ajouter nom d'utilisateur et mot de passe à Password.txt				
-						password = in.readUTF();
-						
+					if (usernameExists = false) { // Ajouter nom d'utilisateur et mot de passe à la HashMap passwords et à Passwords.txt				
+						passwords.put(username, password);
+						addPassword(username, password);
 					}
 					else { // Vérifier que le mot de passe fourni correspond au nom d'utilisateur
-						Boolean passwordIsCorrect = false;
-						password = in.readUTF();
-						if (splitTxtLine[1] == password) {
-							passwordIsCorrect = true;
-						}
+						passwordIsCorrect = (password == passwords.get(username));
 					}
 					
-					// Si passwordIsCorrect = false redemander username, password.
-					// Else envoyer les 15 derniers messages du log et poursuivre...
+					// if (!passwordIsCorrect) redemander username, password.
+					
+					// else envoyer les 15 derniers messages du log et poursuivre...
 
-				} while (!readFromClient.equals("quit()"));
+				} while (!passwordIsCorrect);
 			} catch (IOException e) {
 				System.out.println("Error handling client#" + clientNumber + ": " + e);
 			} finally {
@@ -235,6 +222,71 @@ public class Server {
 
 		// Fermeture du Scanner
 		sc.close();
+	}
+	
+	private static void createPasswordsTxt() {
+		// Crée le fichier Passwords.txt s'il n'existe pas déjà
+		try {
+			File passwords = new File("Passwords.txt");
+			passwords.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void importPasswords() {
+		BufferedReader br = null;
+		try {
+			File fdPasswords = new File("Passwords.txt");
+			String[] splitTxtLine = null;
+			FileReader fr = new FileReader(fdPasswords);
+			br = new BufferedReader(fr);
+			String txtLine;
+			
+			while((txtLine = br.readLine()) != null) {
+				splitTxtLine = txtLine.split(" ");
+				passwords.put(splitTxtLine[0], splitTxtLine[1]);
+			}
+		}
+		catch (IOException e) {
+			System.err.println("IOException was caught.");
+			e.printStackTrace();
+		} finally {
+			try {
+				br.close();
+			}
+			catch (IOException e) {
+				System.err.println("IOException was caught.");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private static void addPassword(String username, String password) {
+		FileWriter fw = null;
+		BufferedWriter bw = null;
+		try {
+			fw = new FileWriter("Passwords.txt", true);
+			bw = new BufferedWriter(fw);
+			
+			bw.write(username);
+			bw.write(" ");
+			bw.write(password);
+			bw.newLine();
+		}
+		catch (IOException e) {
+			System.err.println("IOException was caught.");
+			e.printStackTrace();
+		} finally {
+			try {
+				bw.close();
+			}
+			catch (IOException e) {
+				System.err.println("IOException was caught.");
+				e.printStackTrace();
+			}
+		}
+		
 	}
 
 }
