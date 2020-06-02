@@ -74,26 +74,6 @@ public class Client {
 				writeToServer = sc.next();
 				out.writeUTF(writeToServer);
 			}
-			
-			
-			/*
-			// Entrée du nom d'utilisateur
-			System.out.print("Enter username: ");
-			writeToServer = sc.next();
-			out.writeUTF(writeToServer);
-			
-			// Entrée du mot de passe
-			System.out.print("Enter password: ");
-			writeToServer = sc.next();
-			out.writeUTF(writeToServer);
-			
-			// Afficher l'état (sauvegarder le nouveau compte ou valider la connexion)
-			readFromServer = in.readUTF();
-			System.out.println(readFromServer);							
-						
-			// validation ou message d'erreur
-			*/
-			
 		} while (!writeToServer.equals(QUIT_COMMAND));
 
 		// Fermeture du Scanner

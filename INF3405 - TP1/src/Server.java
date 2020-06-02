@@ -2,18 +2,19 @@ import java.io.DataOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 import java.util.HashMap;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-
+import java.time.format.DateTimeFormatter;  
+import java.time.LocalDateTime;    
 
 public class Server {
 	private static ServerSocket listener;
@@ -58,6 +59,8 @@ public class Server {
 		int clientNumber = 0;
 		
 		validateAddress();
+		
+		createLogTxt();
 		
 		createPasswordsTxt();
 		
@@ -145,14 +148,28 @@ public class Server {
 							passwordIsCorrect = password.equals(passwords.get(username));										
 						}	
 						
-						// tant que !passwordIsCorrect, redemander username et password					
-						// else envoyer les 15 derniers messages du log et poursuivre...	
+						// Répéter la boucle tant que la combinaison username-password est invalide					
 						if (!passwordIsCorrect && usernameExists) {
 							out.writeUTF("ERROR: Wrong password!");
 						}
 					} while (!passwordIsCorrect);
+					
+					// Combinaison username-password valide
 					out.writeUTF("Access granted! Welcome " + username + "!");
-					out.writeUTF("> Enter");					
+					out.writeUTF("> Enter message:");
+					
+					// Clavardage...
+					String message;
+					String timestamp;
+					while(true) {
+						message = in.readUTF(); 
+						timestamp = getTimestamp();
+						message = "[" + username + " - " + this.socket.getInetAddress() + ":" + this.socket.getPort() + " - " + timestamp + "]: " + message;
+						out.writeUTF(message);
+						saveToLog(message);
+						out.writeUTF("> Enter message:");
+					}
+
 				}
 			} catch (IOException e) {
 				System.out.println("Error handling client#" + clientNumber + ": " + e);
@@ -285,7 +302,46 @@ public class Server {
 				e.printStackTrace();
 			}
 		}
-		
+	}
+	
+	private static String getTimestamp() {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd@HH:mm:ss");
+		LocalDateTime ts = LocalDateTime.now();  
+		return formatter.format(ts);
 	}
 
+	private static void createLogTxt() {
+		try {
+			File log = new File("Log.txt");
+			log.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void saveToLog(String message) {
+		FileWriter fw = null;
+		BufferedWriter bw = null;
+		PrintWriter pw = null;
+		try {
+			fw = new FileWriter("Log.txt", true);
+			bw = new BufferedWriter(fw);
+			pw = new PrintWriter(bw);
+			
+			pw.println(message);
+		}
+		catch (IOException e) {
+			System.err.println("IOException was caught.");
+			e.printStackTrace();
+		} finally {
+			try {
+				bw.close();
+			}
+			catch (IOException e) {
+				System.err.println("IOException was caught.");
+				e.printStackTrace();
+			}
+		}
+	}
+	
 }
