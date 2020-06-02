@@ -23,6 +23,7 @@ public class Server {
 	private static int PORT_RANGE_MIN = 5000;
 	private static int PORT_RANGE_MAX = 5050;
 	private static String QUIT_COMMAND = "quit()";
+	private static int NUM_RECENT_MESSAGES = 15;
 
 	// Création du scanner pour lire les entrées de l'utilisateur
 	private static Scanner sc = new Scanner(System.in);
@@ -137,33 +138,35 @@ public class Server {
 						
 						if (usernameExists == false) { // Ajouter nom d'utilisateur et mot de passe à la HashMap passwords et à Passwords.txt
 							if (!username.equals(QUIT_COMMAND) || !username.equals(QUIT_COMMAND)) {
-								out.writeUTF("Username non-existent! Saving new account...\n");
+								out.writeUTF("Username non-existent! Saving new account...");
 								passwords.put(username, password);
 								addPassword(username, password);
 							}
 						}
 						else { // Vérifier que le mot de passe fourni correspond au nom d'utilisateur	
-							out.writeUTF("Authentification...\n");
+							out.writeUTF("Authentification...");
 							passwordIsCorrect = password.equals(passwords.get(username));										
 						}	
 						
 						// Répéter la boucle tant que la combinaison username-password est invalide					
 						if (!passwordIsCorrect && usernameExists) {
-							out.writeUTF("ERROR: Wrong password!\n");
+							out.writeUTF("ERROR: Wrong password!");
 						}
 					} while (!passwordIsCorrect);
 					
 					// Combinaison username-password valide
-					out.writeUTF("Access granted! Welcome " + username + "!\n");
-					out.writeUTF("You can start chatting now.\n");
-					
+					out.writeUTF("Access granted! Welcome " + username + "!");
+										
 					// Historique des 15 derniers messages
+					out.writeUTF("***The following is the last 15 messages***");
 					LinkedList<String> lastMessages = lastMessages();
 					for (String line : lastMessages) {
 						out.writeUTF(line);
 					}
+					out.writeUTF("*******************************************");
 					
 					// Clavardage...
+					out.writeUTF("You can start chatting now.");
 					String message;
 					String timestamp;
 					String loggedMessage;
@@ -173,12 +176,11 @@ public class Server {
 						timestamp = getTimestamp();
 						loggedMessage = "[" + username + " - " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + " - " + timestamp + "]: ";
 						if (message.equals(QUIT_COMMAND)) {
-							loggedMessage += "*HAS LEFT THE SERVER*\n";
+							loggedMessage += "*HAS LEFT THE SERVER*";
 						} else {
-							loggedMessage += message + "\n";
+							loggedMessage += message;
 							out.writeUTF(loggedMessage);								
 						}
-						loggedMessage = loggedMessage.substring(0, loggedMessage.length()-1);
 						saveToLog(loggedMessage);	
 					}
 
@@ -373,9 +375,10 @@ public class Server {
 				logBuffer.push(lineBuffer);
 			}
 			
-			for (int i = 0; (i < 15) && (!logBuffer.isEmpty()); i++) {
+			for (int i = 0; (i < NUM_RECENT_MESSAGES) && (!logBuffer.isEmpty()); i++) {
 				lastMessages.add(logBuffer.pop());
-			}
+			}		
+			lastMessages = reverseList(lastMessages);
 		}
 		catch (IOException e) {
 			System.err.println("IOException was caught.");
@@ -394,4 +397,11 @@ public class Server {
 		return lastMessages;
 	}
 	
+	private static LinkedList<String> reverseList(LinkedList<String> list) {
+		LinkedList<String> newList = new LinkedList<String>();
+		for (String line : list) {
+			newList.push(line);
+		}	
+		return newList;
+	}	
 }

@@ -63,9 +63,9 @@ public class Client {
 			readFromServer = in.readUTF();			
 			if (readFromServer.contains("ERROR:")) {
 				// Si le dernier message du serveur contient "ERROR:", affiche sur la chaine en tant qu'erreur
-				System.err.print(readFromServer);
+				System.err.println(readFromServer);
 			} else {
-				System.out.print(readFromServer);
+				System.out.println(readFromServer);
 			}					
 			
 			// Le client ne peut écrire tant que le dernier message du serveur ne contient pas "> " 
