@@ -44,7 +44,7 @@ public class Client {
 
 		System.out.format("Client - The server is running on %s:%d%n", serverAddress, serverPort);
 
-		System.out.println("Type \"" + QUIT_COMMAND + "\"to close the server!");
+		System.out.println("Type \"" + QUIT_COMMAND + "\"to leave the server!");
 
 		// Création d'un canal sortant pour envoyer des messages au serveur
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -63,15 +63,15 @@ public class Client {
 			readFromServer = in.readUTF();			
 			if (readFromServer.contains("ERROR:")) {
 				// Si le dernier message du serveur contient "ERROR:", affiche sur la chaine en tant qu'erreur
-				System.err.println(readFromServer);
+				System.err.print(readFromServer);
 			} else {
-				System.out.println(readFromServer);
+				System.out.print(readFromServer);
 			}					
 			
-			// Le client ne peut écrire tant que le dernier message du serveur ne contient pas "> Enter" 
-			if (readFromServer.contains("> Enter")) {
+			// Le client ne peut écrire tant que le dernier message du serveur ne contient pas "> " 
+			if (readFromServer.contains("> ")) {
 				// Écrire canal sortant (to Server)
-				writeToServer = sc.next();
+				writeToServer = sc.next()+sc.nextLine();
 				out.writeUTF(writeToServer);
 			}
 		} while (!writeToServer.equals(QUIT_COMMAND));

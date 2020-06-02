@@ -126,48 +126,55 @@ public class Server {
 				
 					do {
 						// Réception du nom d'utilisateur du client
-						out.writeUTF("> Enter username:");					
+						out.writeUTF("> Enter username: ");					
 						username = in.readUTF();
 						
 						// Recherche du nom d'utilisateur dans la HashMap passwords
 						Boolean usernameExists = passwords.containsKey(username);
 						
 						// Réception du mot de passe du client
-						out.writeUTF("> Enter password:");
+						out.writeUTF("> Enter password: ");
 						password = in.readUTF();
 						
 						if (usernameExists == false) { // Ajouter nom d'utilisateur et mot de passe à la HashMap passwords et à Passwords.txt
 							if (!username.equals(QUIT_COMMAND) || !username.equals(QUIT_COMMAND)) {
-								out.writeUTF("Username non-existent! Saving new account...");
+								out.writeUTF("Username non-existent! Saving new account...\n");
 								passwords.put(username, password);
 								addPassword(username, password);
 							}
 						}
 						else { // Vérifier que le mot de passe fourni correspond au nom d'utilisateur	
-							out.writeUTF("Authentification...");
+							out.writeUTF("Authentification...\n");
 							passwordIsCorrect = password.equals(passwords.get(username));										
 						}	
 						
 						// Répéter la boucle tant que la combinaison username-password est invalide					
 						if (!passwordIsCorrect && usernameExists) {
-							out.writeUTF("ERROR: Wrong password!");
+							out.writeUTF("ERROR: Wrong password!\n");
 						}
 					} while (!passwordIsCorrect);
 					
 					// Combinaison username-password valide
-					out.writeUTF("Access granted! Welcome " + username + "!");
-					out.writeUTF("> Enter message:");
+					out.writeUTF("Access granted! Welcome " + username + "!\n");
+					out.writeUTF("You can start chatting now.\n");
 					
 					// Clavardage...
 					String message;
 					String timestamp;
+					String loggedMessage;
 					while(true) {
+						out.writeUTF("> ");
 						message = in.readUTF(); 
 						timestamp = getTimestamp();
-						message = "[" + username + " - " + this.socket.getInetAddress() + ":" + this.socket.getPort() + " - " + timestamp + "]: " + message;
-						out.writeUTF(message);
-						saveToLog(message);
-						out.writeUTF("> Enter message:");
+						loggedMessage = "[" + username + " - " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + " - " + timestamp + "]: ";
+						if (message.equals(QUIT_COMMAND)) {
+							loggedMessage += "*HAS LEFT THE SERVER*\n";
+						} else {
+							loggedMessage += message + "\n";
+							out.writeUTF(loggedMessage);								
+						}
+						loggedMessage = loggedMessage.substring(0, loggedMessage.length()-1);
+						saveToLog(loggedMessage);	
 					}
 
 				}
