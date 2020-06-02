@@ -11,8 +11,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
-import java.util.HashMap;
+import java.util.*;
 import java.time.format.DateTimeFormatter;  
 import java.time.LocalDateTime;    
 
@@ -158,6 +157,12 @@ public class Server {
 					out.writeUTF("Access granted! Welcome " + username + "!\n");
 					out.writeUTF("You can start chatting now.\n");
 					
+					// Historique des 15 derniers messages
+					LinkedList<String> lastMessages = lastMessages();
+					for (String line : lastMessages) {
+						out.writeUTF(line);
+					}
+					
 					// Clavardage...
 					String message;
 					String timestamp;
@@ -258,11 +263,12 @@ public class Server {
 	}
 	
 	private static void importPasswords() {
+		FileReader fr = null;
 		BufferedReader br = null;
 		try {
 			File fdPasswords = new File("Passwords.txt");
 			String[] splitTxtLine = null;
-			FileReader fr = new FileReader(fdPasswords);
+			fr = new FileReader(fdPasswords);
 			br = new BufferedReader(fr);
 			String txtLine;
 			
@@ -349,6 +355,43 @@ public class Server {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private static LinkedList<String> lastMessages() {
+		FileReader fr = null;
+		BufferedReader br = null;
+		
+		LinkedList<String> logBuffer = new LinkedList<String>();
+		LinkedList<String> lastMessages = new LinkedList<String>();
+		String lineBuffer;
+		
+		try {
+			fr = new FileReader("Log.txt");
+			br = new BufferedReader(fr);
+			
+			while((lineBuffer = br.readLine()) != null) {
+				logBuffer.push(lineBuffer);
+			}
+			
+			for (int i = 0; (i < 15) && (!logBuffer.isEmpty()); i++) {
+				lastMessages.add(logBuffer.pop());
+			}
+		}
+		catch (IOException e) {
+			System.err.println("IOException was caught.");
+			e.printStackTrace();
+		}
+		finally
+		{
+			try {
+				br.close();
+			}
+			catch (IOException e) {
+				System.err.println("IOException was caught.");
+				e.printStackTrace();
+			}
+		}
+		return lastMessages;
 	}
 	
 }
