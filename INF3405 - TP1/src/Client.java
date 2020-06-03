@@ -11,7 +11,7 @@ public class Client {
 	private static int ADDRESS_LENGTH = 4;
 	private static int PORT_RANGE_MIN = 5000;
 	private static int PORT_RANGE_MAX = 5050;
-	private static String QUIT_COMMAND = "quit()";
+	private static int MAX_MESSAGE_LENGTH = 200;
 
 	// Création du scanner pour lire les entrées de l'utilisateur
 	private static Scanner sc = new Scanner(System.in);
@@ -19,7 +19,13 @@ public class Client {
 	// Adresse et port du serveur
 	private static String serverAddress;
 	private static int serverPort;
-
+	
+	// Création d'un canal sortant pour envoyer des messages au serveur
+	private static DataOutputStream out;
+	
+	// Création d'un canal entrant pour recevoir les messages envoyés par le serveur
+	private static DataInputStream in;
+	
 	/*
 	 * Requis du client :
 	 * 
@@ -38,25 +44,19 @@ public class Client {
 	public static void main(String[] args) throws Exception {
 
 		validateAddress();
+		boolean connection = true;
 		
 		// Création d'une nouvelle connexion avec le serveur
 		socket = new Socket(serverAddress, serverPort);
 
 		System.out.format("Client - The server is running on %s:%d%n", serverAddress, serverPort);
 
-		System.out.println("Type \"" + QUIT_COMMAND + "\"to leave the server!");
-
-		// Création d'un canal sortant pour envoyer des messages au serveur
-		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-		// Création de la chaine contenant les messages à envoyer au server
-		String writeToServer = null;
-
-		// Création d'un canal entrant pour recevoir les messages envoyés par le serveur
-		DataInputStream in = new DataInputStream(socket.getInputStream());
-
-		// Création de la chaine contenant les messages provenant du server
-		String readFromServer;
+		// Ouverture des canaux
+		out = new DataOutputStream(socket.getOutputStream());
+		in = new DataInputStream(socket.getInputStream());
+	
+		String writeToServer = null;	
+		String readFromServer = null;
 
 		do {
 			// Lire canal entrant (from Server)
@@ -64,6 +64,8 @@ public class Client {
 			if (readFromServer.contains("ERROR:")) {
 				// Si le dernier message du serveur contient "ERROR:", affiche sur la chaine en tant qu'erreur
 				System.err.println(readFromServer);
+			} else if (readFromServer.contains("*DISCONNECTED*")) {
+				connection = false;
 			} else {
 				System.out.println(readFromServer);
 			}					
@@ -72,12 +74,22 @@ public class Client {
 			if (readFromServer.contains("> ")) {
 				// Écrire canal sortant (to Server)
 				writeToServer = sc.next()+sc.nextLine();
-				out.writeUTF(writeToServer);
+				
+				// Message ne doit pas dépasser 200 caractères
+				if (writeToServer.length() <= MAX_MESSAGE_LENGTH) {
+					out.writeUTF(writeToServer);
+				} else {
+					System.err.println("ERROR: Message too long! Maximum " + MAX_MESSAGE_LENGTH + " characters.");
+				}	
 			}
-		} while (!writeToServer.equals(QUIT_COMMAND));
+		} while (connection);
 
 		// Fermeture du Scanner
 		sc.close();
+		
+		// Fermeture des canaux
+		in.close();
+		out.close();
 
 		// Fermeture de la connexion avec le serveur
 		socket.close();

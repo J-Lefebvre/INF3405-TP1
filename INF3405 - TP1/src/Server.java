@@ -35,6 +35,9 @@ public class Server {
 	// Correspondances nom d'utilisateur - mot de passe
 	private static HashMap<String, String> passwords = new HashMap<String, String>();
 	
+	// Conteneur des threads pour chaque client
+	private static ArrayList<ClientHandler> clients = new ArrayList<>();
+	
 	/*
 	 * Requis du serveur:
 	 * 
@@ -85,7 +88,12 @@ public class Server {
 				// Important : la fonction accept() est bloquante : attend qu'un prochain client
 				// se connecte
 				// Une nouvelle connection : on incrémente le compter clientNumber
-				new ClientHandler(listener.accept(), clientNumber++).start();
+				//		new ClientHandler(listener.accept(), clientNumber++).start();
+				
+				
+				ClientHandler clientThread = new ClientHandler(listener.accept(), clientNumber++);
+				clients.add(clientThread);
+				clientThread.start();				
 			}
 		} finally {
 			// Fermeture de la connexion
@@ -100,12 +108,21 @@ public class Server {
 	private static class ClientHandler extends Thread {
 		private Socket socket;
 		private int clientNumber;
+		private DataInputStream in;
+		private DataOutputStream out;
+		private boolean connection;
 
-		public ClientHandler(Socket socket, int clientNumber) {
+		public ClientHandler(Socket socket, int clientNumber) throws IOException {
 			this.socket = socket;
 			this.clientNumber = clientNumber;
+			// Création d'un canal entrant pour recevoir les messages du client
+			in = new DataInputStream(socket.getInputStream());
+			// Création d'un canal sortant pour envoyer des messages au client
+			out = new DataOutputStream(socket.getOutputStream());
+			
 			System.out.println("New connection with client #" + clientNumber + " at " + socket.getLocalAddress() + ":"
 					+ socket.getLocalPort());
+			connection = true;
 		}
 
 		/*
@@ -113,13 +130,7 @@ public class Server {
 		 */
 		public void run() {
 			try {
-				while (true) {
-					// Création d'un canal entrant pour recevoir les messages du client
-					DataInputStream in = new DataInputStream(socket.getInputStream());
-	
-					// Création d'un canal sortant pour envoyer des messages au client
-					DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-						
+				while (connection) {		
 					String username;
 					String password;
 					Boolean passwordIsCorrect = false;
@@ -141,6 +152,8 @@ public class Server {
 								out.writeUTF("Username non-existent! Saving new account...");
 								passwords.put(username, password);
 								addPassword(username, password);
+							} else {
+								connection = false;
 							}
 						}
 						else { // Vérifier que le mot de passe fourni correspond au nom d'utilisateur	
@@ -157,16 +170,23 @@ public class Server {
 					// Combinaison username-password valide
 					out.writeUTF("Access granted! Welcome " + username + "!");
 										
-					// Historique des 15 derniers messages
-					out.writeUTF("***The following is the last 15 messages***");
+					// Historique des 15 derniers messages					
 					LinkedList<String> lastMessages = lastMessages();
-					for (String line : lastMessages) {
-						out.writeUTF(line);
+					if (lastMessages.size() != 0) {
+						if (lastMessages.size() == 1) {
+							out.writeUTF("***The following is the last message***");
+						}
+						else {
+							out.writeUTF("***The following are the last " + lastMessages.size() + " messages***");
+						}
+						for (String line : lastMessages) {
+							out.writeUTF(line);
+						}
+						out.writeUTF("*******************************************");
 					}
-					out.writeUTF("*******************************************");
-					
 					// Clavardage...
 					out.writeUTF("You can start chatting now.");
+					out.writeUTF("Type \"" + QUIT_COMMAND + "\"to leave the server!");
 					String message;
 					String timestamp;
 					String loggedMessage;
@@ -176,21 +196,27 @@ public class Server {
 						timestamp = getTimestamp();
 						loggedMessage = "[" + username + " - " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + " - " + timestamp + "]: ";
 						if (message.equals(QUIT_COMMAND)) {
-							loggedMessage += "*HAS LEFT THE SERVER*";
+							//	loggedMessage += "*HAS LEFT THE SERVER*";
+							out.writeUTF("*DISCONNECTED*");
+							connection = false;
 						} else {
 							loggedMessage += message;
-							out.writeUTF(loggedMessage);								
-						}
-						saveToLog(loggedMessage);	
+							System.out.println(loggedMessage);
+							// out.writeUTF(loggedMessage);	
+							saveToLog(loggedMessage);
+						}																
 					}
 
 				}
+				// Fermeture des canaux
+				in.close();
+				out.close();		
 			} catch (IOException e) {
 				System.out.println("Error handling client#" + clientNumber + ": " + e);
 			} finally {
 				try {
 					// Fermeture de la connexion avec le client
-					socket.close();
+					socket.close();					
 				} catch (IOException e) {
 					System.out.println("Couldn't close a socket, what's going on?");
 				}
