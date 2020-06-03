@@ -43,12 +43,12 @@ public class Server {
 	 * 
 	 * TODONE: Saisie des paramètres du serveur (adresse IP, port d’écoute entre 5000 et 5050) 
 	 * TODONE: Pouvoir connecter des utilisateurs avec leurs mots de passe 
-	 * TODO: Pouvoir envoyer un historique des sessions de clavardage 
+	 * TODONE: Pouvoir envoyer un historique des sessions de clavardage 
 	 * TODO: Pouvoir fermer le serveur puis le rouvrir, et avoir tous les profils usagers et messages disponibles (écriture sur disque et pas uniquement sur RAM)
-	 * TODO: Recevoir les messages des clients 
-	 * TODO: Tenir un historique de toutes les messages.
+	 * TODONE: Recevoir les messages des clients 
+	 * TODONE: Tenir un historique de toutes les messages.
 	 * TODONE: Tenir une base de données des usagers et leurs mots de passe
-	 * TODO: Afficher en temps réel les messages 
+	 * TODONE: Afficher en temps réel les messages 
 	 * TODONE: Effectuer correctement la vérification nom d’utilisateur/ mot de passe
 	 * TODONE: Créer les comptes automatiquement s’ils n’existent pas
 	 */
@@ -190,23 +190,19 @@ public class Server {
 					while(true) {
 						out.writeUTF("> ");
 						message = in.readUTF(); 
-						timestamp = getTimestamp();
-						loggedMessage = "[" + username + " - " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + " - " + timestamp + "]: ";
+						timestamp = getTimestamp();						
 						if (message.equals(QUIT_COMMAND)) {
-							loggedMessage += "*HAS LEFT THE SERVER*";
-							for (ClientHandler ch : clients) {
-								ch.out.writeUTF(loggedMessage);
-							}
+							out.writeUTF("*DISCONNECTED*");			
 							connection = false;
-							saveToLog(loggedMessage);
 						} else {
-							loggedMessage += message;
+							loggedMessage = "[" + username + " - " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + " - " + timestamp + "]: " + message;		
 							System.out.println(loggedMessage);
+							
 							for (ClientHandler ch : clients) {
 								ch.out.writeUTF(loggedMessage);
 							}
 							saveToLog(loggedMessage);
-						}																
+						}													
 					}
 
 				}
