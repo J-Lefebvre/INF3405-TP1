@@ -125,9 +125,6 @@ public class Server {
 			connection = true;
 		}
 
-		/*
-		 * Une thread se charge d'envoyer au client un message de bienvenue
-		 */
 		public void run() {
 			try {
 				while (connection) {		
@@ -196,13 +193,18 @@ public class Server {
 						timestamp = getTimestamp();
 						loggedMessage = "[" + username + " - " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + " - " + timestamp + "]: ";
 						if (message.equals(QUIT_COMMAND)) {
-							//	loggedMessage += "*HAS LEFT THE SERVER*";
-							out.writeUTF("*DISCONNECTED*");
+							loggedMessage += "*HAS LEFT THE SERVER*";
+							for (ClientHandler ch : clients) {
+								ch.out.writeUTF(loggedMessage);
+							}
 							connection = false;
+							saveToLog(loggedMessage);
 						} else {
 							loggedMessage += message;
 							System.out.println(loggedMessage);
-							// out.writeUTF(loggedMessage);	
+							for (ClientHandler ch : clients) {
+								ch.out.writeUTF(loggedMessage);
+							}
 							saveToLog(loggedMessage);
 						}																
 					}
