@@ -12,6 +12,7 @@ public class Client {
 	private static int PORT_RANGE_MIN = 5000;
 	private static int PORT_RANGE_MAX = 5050;
 	private static int MAX_MESSAGE_LENGTH = 200;
+	private static String CLIENT_DISCONNECTION = "*DISCONNECTED*";
 
 	// Création du scanner pour lire les entrées de l'utilisateur
 	private static Scanner sc = new Scanner(System.in);
@@ -31,10 +32,10 @@ public class Client {
 	 * 
 	 * TODONE : Saisie et validation des paramètres serveur (adresse IP, port) 
 	 * TODONE : Saisie et validation nom d'utilisateur et mot de passe 
-	 * TODO : Connexion au serveur
+	 * TODONE : Connexion au serveur
 	 * TODO : Réception des messages OU erreur mot de passe
-	 * TODO : Saisir une réponse (200 char maximum)
-	 * TODO : Transmettre la réponse au serveur 
+	 * TODONE : Saisir une réponse (200 char maximum)
+	 * TODONE : Transmettre la réponse au serveur 
 	 * TODONE : Déconnexion
 	 */
 
@@ -64,7 +65,7 @@ public class Client {
 			if (readFromServer.contains("ERROR:")) {
 				// Si le dernier message du serveur contient "ERROR:", affiche sur la chaine en tant qu'erreur
 				System.err.println(readFromServer);
-			} else if (readFromServer.contains("*DISCONNECTED*")) {
+			} else if (readFromServer.contains(CLIENT_DISCONNECTION)) {
 				connection = false;
 			} else {
 				System.out.println(readFromServer);
@@ -72,9 +73,8 @@ public class Client {
 			
 			// Le client ne peut écrire tant que le dernier message du serveur ne contient pas "> " 
 			if (readFromServer.contains("> ")) {
-				// Écrire canal sortant (to Server)
+				// Écrire canal sortant (to Server)	
 				writeToServer = sc.next()+sc.nextLine();
-				
 				// Message ne doit pas dépasser 200 caractères
 				if (writeToServer.length() <= MAX_MESSAGE_LENGTH) {
 					out.writeUTF(writeToServer);

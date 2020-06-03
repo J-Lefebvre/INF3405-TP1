@@ -24,6 +24,7 @@ public class Server {
 	private static int PORT_RANGE_MAX = 5050;
 	private static String QUIT_COMMAND = "quit()";
 	private static int NUM_RECENT_MESSAGES = 15;
+	private static String CLIENT_DISCONNECTION = "*DISCONNECTED*";
 
 	// Création du scanner pour lire les entrées de l'utilisateur
 	private static Scanner sc = new Scanner(System.in);
@@ -44,7 +45,7 @@ public class Server {
 	 * TODONE: Saisie des paramètres du serveur (adresse IP, port d’écoute entre 5000 et 5050) 
 	 * TODONE: Pouvoir connecter des utilisateurs avec leurs mots de passe 
 	 * TODONE: Pouvoir envoyer un historique des sessions de clavardage 
-	 * TODO: Pouvoir fermer le serveur puis le rouvrir, et avoir tous les profils usagers et messages disponibles (écriture sur disque et pas uniquement sur RAM)
+	 * TODONE: Pouvoir fermer le serveur puis le rouvrir, et avoir tous les profils usagers et messages disponibles (écriture sur disque et pas uniquement sur RAM)
 	 * TODONE: Recevoir les messages des clients 
 	 * TODONE: Tenir un historique de toutes les messages.
 	 * TODONE: Tenir une base de données des usagers et leurs mots de passe
@@ -192,8 +193,10 @@ public class Server {
 						message = in.readUTF(); 
 						timestamp = getTimestamp();						
 						if (message.equals(QUIT_COMMAND)) {
-							out.writeUTF("*DISCONNECTED*");			
+							out.writeUTF(CLIENT_DISCONNECTION);			
 							connection = false;
+						} else if (message.isEmpty()) {
+							
 						} else {
 							loggedMessage = "[" + username + " - " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + " - " + timestamp + "]: " + message;		
 							System.out.println(loggedMessage);
